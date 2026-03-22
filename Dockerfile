@@ -11,4 +11,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY bot_single.py .
 
+# Railway passes env vars at runtime — no ARG needed
 CMD ["python", "-u", "bot_single.py"]

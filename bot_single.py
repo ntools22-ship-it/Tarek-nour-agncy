@@ -1105,13 +1105,34 @@ async def post_init(app):
     log.info("✅ وكالة طارق نور — جاهزة!")
 
 def main():
-    if not BOT_TOKEN:
-        print("❌  BOT_TOKEN غير موجود! أضفه في Environment Variables")
+    # Try all possible env var names Railway might use
+    token = (
+        os.environ.get("BOT_TOKEN") or
+        os.environ.get("bot_token") or
+        os.environ.get("TELEGRAM_TOKEN") or
+        os.environ.get("TELEGRAM_BOT_TOKEN") or ""
+    ).strip()
+
+    # Debug log: show what Railway sees
+    all_keys = sorted(os.environ.keys())
+    log.info(f"ENV VARS AVAILABLE: {all_keys}")
+
+    if not token:
+        import time
+        log.error("BOT_TOKEN NOT FOUND. Available vars: " + str(all_keys))
+        time.sleep(3)
         sys.exit(1)
+
+    groq = (os.environ.get("GROQ_API_KEY") or os.environ.get("groq_api_key") or "").strip()
+
+    global BOT_TOKEN, GROQ_API_KEY
+    BOT_TOKEN = token
+    GROQ_API_KEY = groq
+
     if not check_ffmpeg():
-        log.warning("⚠️  FFmpeg غير مثبت — الفيديو لن يعمل")
-    if not GROQ_API_KEY:
-        log.warning("⚠️  GROQ_API_KEY غير موجود — الذكاء سيعمل بنماذج احتياطية")
+        log.warning("⚠️  FFmpeg غير مثبت")
+    if not groq:
+        log.warning("⚠️  GROQ_API_KEY غير موجود — template mode")
 
     from telegram.ext import (Application, CommandHandler, MessageHandler,
                                CallbackQueryHandler, filters)
